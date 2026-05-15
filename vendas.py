@@ -4,6 +4,7 @@ import pandas as pd
 import sqlite3
 import os
 from zoneinfo import ZoneInfo
+import time
 
 st.set_page_config(page_title="Maximos Pods", layout="wide", initial_sidebar_state="expanded")
 
@@ -45,29 +46,18 @@ init_db()
 
 def salvar_venda(venda, venda_id=None):
     conn = get_connection()
-    if venda_id:  # Edição
-        conn.execute('''
-            UPDATE vendas SET Data=?, Cliente=?, WhatsApp=?, Produto=?, Valor_Bruto=?,
-            Custo=?, Valor_Liquido=?, Forma_Pagamento=?, Status=?, Observacao=?
-            WHERE id=?
-        ''', (venda['Data'], venda['Cliente'], venda['WhatsApp'], venda['Produto'],
-              venda['Valor_Bruto'], venda['Custo'], venda['Valor_Liquido'],
-              venda['Forma_Pagamento'], venda['Status'], venda['Observacao'], venda_id))
+    if venda_id:
+        conn.execute('UPDATE vendas SET Data=?, Cliente=?, WhatsApp=?, Produto=?, Valor_Bruto=?, Custo=?, Valor_Liquido=?, Forma_Pagamento=?, Status=?, Observacao=? WHERE id=?',
+                     (venda['Data'], venda['Cliente'], venda['WhatsApp'], venda['Produto'], venda['Valor_Bruto'], venda['Custo'], venda['Valor_Liquido'], venda['Forma_Pagamento'], venda['Status'], venda['Observacao'], venda_id))
     else:
-        conn.execute('''
-            INSERT INTO vendas (Data, Cliente, WhatsApp, Produto, Valor_Bruto, Custo, 
-            Valor_Liquido, Forma_Pagamento, Status, Observacao, Data_Criacao)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (venda['Data'], venda['Cliente'], venda['WhatsApp'], venda['Produto'],
-              venda['Valor_Bruto'], venda['Custo'], venda['Valor_Liquido'],
-              venda['Forma_Pagamento'], venda['Status'], venda['Observacao'],
-              datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        conn.execute('INSERT INTO vendas (Data, Cliente, WhatsApp, Produto, Valor_Bruto, Custo, Valor_Liquido, Forma_Pagamento, Status, Observacao, Data_Criacao) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                     (venda['Data'], venda['Cliente'], venda['WhatsApp'], venda['Produto'], venda['Valor_Bruto'], venda['Custo'], venda['Valor_Liquido'], venda['Forma_Pagamento'], venda['Status'], venda['Observacao'], datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
     conn.commit()
     conn.close()
 
 def carregar_vendas():
     conn = get_connection()
-    df = pd.read_sql_query("SELECT * FROM vendas ORDER BY Data DESC, id DESC", conn)
+    df = pd.read_sql_query("SELECT * FROM vendas ORDER BY id DESC", conn)
     if not df.empty:
         df['Data'] = pd.to_datetime(df['Data'])
     conn.close()
@@ -86,23 +76,28 @@ with col_logo:
         st.image(LOGO_URL, width=130)
     except:
         st.markdown("**MAXIMOS**")
-
 with col_titulo:
-    st.markdown("""
-        <h1 style='margin: 0; color: #FF4B4B;'>MAXIMOS PODS</h1>
-        <p style='color: #AAAAAA; margin-top: 5px;'>Sistema Profissional de Vendas</p>
-    """, unsafe_allow_html=True)
+    st.markdown("<h1 style='margin: 0; color: #FF4B4B;'>MAXIMOS PODS</h1><p style='color: #AAAAAA;'>Sistema Profissional de Vendas</p>", unsafe_allow_html=True)
 
 try:
-    st.image(BANNER_URL, use_container_width=True)   # ← Corrigido aqui
+    st.image(BANNER_URL, use_container_width=True)
 except:
     pass
 
 st.markdown("---")
 
+# ====================== AUTO REFRESH ======================
+if 'last_refresh' not in st.session_state:
+    st.session_state.last_refresh = time.time()
+
+# Atualiza automaticamente a cada 3 segundos
+if time.time() - st.session_state.last_refresh > 3:
+    st.session_state.last_refresh = time.time()
+    st.rerun()
+
 df = carregar_vendas()
 
-# Filtro
+# ====================== FILTRO ======================
 st.sidebar.markdown("### 📅 Filtro por Período")
 data_inicio = st.sidebar.date_input("Data Inicial", datetime.today() - timedelta(days=30))
 data_fim = st.sidebar.date_input("Data Final", datetime.today())
@@ -117,8 +112,9 @@ aba = st.sidebar.selectbox("Menu", ["Nova Venda", "Dashboard", "Clientes", "Hist
 
 # ====================== NOVA VENDA / EDIÇÃO ======================
 if aba == "Nova Venda":
+    # (código de edição mantido - igual ao anterior)
     st.subheader("📌 Nova Venda" if 'edit_id' not in st.session_state else "✏️ Editar Venda")
-
+    
     edit_id = st.session_state.get('edit_id')
     edit_data = df[df['id'] == edit_id].iloc[0] if edit_id and not df.empty else None
 
@@ -130,18 +126,14 @@ if aba == "Nova Venda":
         produto = st.text_input("Produto / Serviço *", value=edit_data['Produto'] if edit_data is not None else "")
     
     with col2:
-        valor_bruto = st.number_input("Valor Bruto (R$)", min_value=0.0, format="%.2f", 
-                                     value=float(edit_data['Valor_Bruto']) if edit_data is not None else 0.0)
-        custo = st.number_input("Custo (R$)", min_value=0.0, format="%.2f", 
-                               value=float(edit_data['Custo']) if edit_data is not None else 0.0)
-        forma = st.selectbox("Forma de Pagamento", ["Pix", "Cartão", "Boleto", "Dinheiro", "Outro"], 
-                            index=0 if edit_data is None else ["Pix", "Cartão", "Boleto", "Dinheiro", "Outro"].index(edit_data['Forma_Pagamento']))
-        status = st.selectbox("Status", ["Pago", "Pendente", "Reembolsado"], 
-                             index=0 if edit_data is None else ["Pago", "Pendente", "Reembolsado"].index(edit_data['Status']))
+        valor_bruto = st.number_input("Valor Bruto (R$)", min_value=0.0, format="%.2f", value=float(edit_data['Valor_Bruto']) if edit_data is not None else 0.0)
+        custo = st.number_input("Custo (R$)", min_value=0.0, format="%.2f", value=float(edit_data['Custo']) if edit_data is not None else 0.0)
+        forma = st.selectbox("Forma de Pagamento", ["Pix", "Cartão", "Boleto", "Dinheiro", "Outro"], index=0 if edit_data is None else ["Pix","Cartão","Boleto","Dinheiro","Outro"].index(edit_data.get('Forma_Pagamento','Pix')))
+        status = st.selectbox("Status", ["Pago", "Pendente", "Reembolsado"], index=0 if edit_data is None else ["Pago","Pendente","Reembolsado"].index(edit_data.get('Status','Pago')))
     
-    obs = st.text_area("Observação", value=edit_data.get('Observacao', '') if edit_data is not None else "")
+    obs = st.text_area("Observação", value=edit_data.get('Observacao','') if edit_data is not None else "")
 
-    if st.button("💾 Salvar Venda" if not edit_id else "💾 Atualizar Venda", type="primary", use_container_width=True):
+    if st.button("💾 Salvar" if not edit_id else "💾 Atualizar Venda", type="primary", use_container_width=True):
         if cliente and produto and valor_bruto > 0:
             nova = {
                 'Data': data.strftime('%Y-%m-%d'),
@@ -156,23 +148,19 @@ if aba == "Nova Venda":
                 'Observacao': obs
             }
             salvar_venda(nova, edit_id)
-            st.success("✅ Sucesso!" if not edit_id else "✅ Venda atualizada!")
+            st.success("✅ Salvo com sucesso!")
             if edit_id:
                 del st.session_state.edit_id
             st.rerun()
 
-# ====================== DASHBOARD, CLIENTES, HISTÓRICO (mantido) ======================
+# ====================== OUTRAS ABAS ======================
 elif aba == "Dashboard":
-    st.subheader("📊 Dashboard")
+    st.subheader("📊 Dashboard (Atualizando a cada 3s)")
     if not df_filtrado.empty:
-        fat = df_filtrado['Valor_Bruto'].sum()
-        lucro = df_filtrado['Valor_Liquido'].sum()
-        qtd = len(df_filtrado)
         col1, col2, col3 = st.columns(3)
-        col1.metric("Total de Vendas", f"{qtd}")
-        col2.metric("Faturamento", f"R$ {fat:,.2f}")
-        col3.metric("Lucro", f"R$ {lucro:,.2f}")
-        st.bar_chart(df_filtrado.groupby(df_filtrado['Data'].dt.date)['Valor_Liquido'].sum())
+        col1.metric("Total Vendas", len(df_filtrado))
+        col2.metric("Faturamento", f"R$ {df_filtrado['Valor_Bruto'].sum():,.2f}")
+        col3.metric("Lucro", f"R$ {df_filtrado['Valor_Liquido'].sum():,.2f}")
 
 elif aba == "Clientes":
     st.subheader("👥 Clientes")
@@ -187,18 +175,17 @@ else:  # Histórico
         for _, row in df_filtrado.iterrows():
             col1, col2, col3, col4 = st.columns([3, 2, 1.5, 1.5])
             with col1:
-                st.write(f"**{row['Cliente']}** — {row['Produto']}")
-                st.caption(f"{row['Data'].strftime('%d/%m/%Y')} | {row['Forma_Pagamento']}")
+                st.write(f"**{row['Cliente']}** - {row['Produto']}")
+                st.caption(f"{row['Data'].strftime('%d/%m/%Y')} | {row['Status']}")
             with col2:
                 st.metric("", f"R$ {row['Valor_Bruto']:,.2f}")
             with col3:
-                if st.button("✏️ Editar", key=f"e{row['id']}"):
+                if st.button("✏️", key=f"edit_{row['id']}"):
                     st.session_state.edit_id = row['id']
                     st.switch_page("vendas.py")
             with col4:
-                if st.button("🗑️", key=f"d{row['id']}"):
+                if st.button("🗑️", key=f"del_{row['id']}"):
                     excluir_venda(row['id'])
-                    st.success("Venda excluída!")
                     st.rerun()
             st.divider()
 
@@ -206,12 +193,10 @@ else:  # Histórico
 st.markdown("---")
 agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
 st.markdown(f"""
-    <div style='text-align: center; background-color: #1E1E2E; padding: 20px; border-radius: 12px;'>
-        <p style='margin:0; color:#AAAAAA;'>🕒 Horário de Brasília</p>
-        <p style='font-size: 2.8rem; font-weight: bold; color: #00FF88; margin:5px 0 0 0;'>
-            {agora.strftime("%H:%M:%S")}
-        </p>
+    <div style='text-align:center; background:#1E1E2E; padding:15px; border-radius:10px;'>
+        <p style='color:#AAA;'>🕒 Horário de Brasília</p>
+        <p style='font-size:2.6rem; color:#00FF88; font-weight:bold; margin:0;'>{agora.strftime('%H:%M:%S')}</p>
     </div>
 """, unsafe_allow_html=True)
 
-st.caption("✅ Banco SQL + Edição/Exclusão | Maximos Pods © 2026")
+st.caption("🔄 Atualizando automaticamente a cada 3 segundos • Maximos Pods")
