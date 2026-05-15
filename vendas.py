@@ -42,9 +42,7 @@ def salvar_venda(venda, venda_id=None):
                       venda['Valor_Bruto'], venda['Custo'], venda['Valor_Liquido'],
                       venda['Forma_Pagamento'], venda['Status'], venda['Observacao'], venda_id))
     else:
-        conn.execute("""INSERT INTO vendas (Data, Cliente, WhatsApp, Produto, Valor_Bruto, Custo, 
-                        Valor_Liquido, Forma_Pagamento, Status, Observacao, Data_Criacao)
-                        VALUES (?,?,?,?,?,?,?,?,?,?,?)""", 
+        conn.execute("""INSERT INTO vendas VALUES (NULL,?,?,?,?,?,?,?,?,?,?)""", 
                      (venda['Data'], venda['Cliente'], venda['WhatsApp'], venda['Produto'],
                       venda['Valor_Bruto'], venda['Custo'], venda['Valor_Liquido'],
                       venda['Forma_Pagamento'], venda['Status'], venda['Observacao'],
@@ -79,13 +77,14 @@ try:
 except:
     st.markdown("---")
 
-# ====================== FORÇA ATUALIZAÇÃO ======================
-if st.button("🔄 Atualizar Tudo", type="secondary"):
-    st.rerun()
+# ====================== VARIÁVEIS DE SESSÃO ======================
+if 'edit_id' not in st.session_state:
+    st.session_state.edit_id = None
 
 df = carregar_vendas()
 
-st.sidebar.markdown("### 📅 Filtro")
+# Filtro
+st.sidebar.markdown("### 📅 Filtro por Período")
 data_inicio = st.sidebar.date_input("Início", datetime.today() - timedelta(days=30))
 data_fim = st.sidebar.date_input("Fim", datetime.today())
 
@@ -95,75 +94,47 @@ if not df.empty:
 else:
     df_filtrado = df
 
-aba = st.sidebar.selectbox("Menu", ["Nova Venda", "Dashboard", "Clientes", "Histórico"])
+aba = st.sidebar.selectbox("Menu", ["Nova Venda", "Dashboard", "Clientes", "Histórico Completo"], key="main_menu")
 
-# ====================== NOVA VENDA ======================
+# ====================== NOVA VENDA / EDIÇÃO ======================
 if aba == "Nova Venda":
-    st.subheader("📌 Nova Venda")
+    edit_id = st.session_state.edit_id
+    edit_data = df[df['id'] == edit_id].iloc[0] if edit_id is not None and not df.empty else None
+
+    st.subheader("✏️ Editar Venda" if edit_id else "📌 Nova Venda")
+
     col1, col2 = st.columns(2)
     with col1:
-        data = st.date_input("Data", datetime.today())
-        cliente = st.text_input("Cliente *")
-        whatsapp = st.text_input("WhatsApp")
-        produto = st.text_input("Produto *")
-    with col2:
-        valor = st.number_input("Valor Bruto R$", min_value=0.0, format="%.2f")
-        custo = st.number_input("Custo R$", min_value=0.0, format="%.2f")
-        forma = st.selectbox("Pagamento", ["Pix", "Cartão", "Boleto", "Dinheiro"])
-        status = st.selectbox("Status", ["Pago", "Pendente", "Reembolsado"])
+        data = st.date_input("Data", value=pd.to_datetime(edit_data['Data']) if edit_data is not None else datetime.today())
+        cliente = st.text_input("Cliente *", value=edit_data['Cliente'] if edit_data is not None else "")
+        whatsapp = st.text_input("WhatsApp", value=edit_data.get('WhatsApp', '') if edit_data is not None else "")
+        produto = st.text_input("Produto *", value=edit_data['Produto'] if edit_data is not None else "")
     
-    obs = st.text_area("Observação")
+    with col2:
+        valor = st.number_input("Valor Bruto R$", min_value=0.0, format="%.2f", value=float(edit_data['Valor_Bruto']) if edit_data is not None else 0.0)
+        custo = st.number_input("Custo R$", min_value=0.0, format="%.2f", value=float(edit_data['Custo']) if edit_data is not None else 0.0)
+        forma = st.selectbox("Pagamento", ["Pix", "Cartão", "Boleto", "Dinheiro", "Outro"], 
+                            index=["Pix","Cartão","Boleto","Dinheiro","Outro"].index(edit_data['Forma_Pagamento']) if edit_data is not None else 0)
+        status = st.selectbox("Status", ["Pago", "Pendente", "Reembolsado"], 
+                             index=["Pago","Pendente","Reembolsado"].index(edit_data['Status']) if edit_data is not None else 0)
+    
+    obs = st.text_area("Observação", value=edit_data.get('Observacao','') if edit_data is not None else "")
 
-    if st.button("💾 Salvar Venda", type="primary", use_container_width=True):
-        if cliente and produto and valor > 0:
-            nova = {
-                'Data': data.strftime('%Y-%m-%d'),
-                'Cliente': cliente,
-                'WhatsApp': whatsapp,
-                'Produto': produto,
-                'Valor_Bruto': valor,
-                'Custo': custo,
-                'Valor_Liquido': round(valor - custo, 2),
-                'Forma_Pagamento': forma,
-                'Status': status,
-                'Observacao': obs
-            }
-            salvar_venda(nova)
-            st.success("✅ Venda salva!")
-            st.rerun()
-        else:
-            st.error("Preencha os campos obrigatórios")
-
-# ====================== HISTÓRICO (com atualização forte) ======================
-elif aba == "Histórico":
-    st.subheader("📋 Histórico Completo")
-    if not df_filtrado.empty:
-        for _, row in df_filtrado.iterrows():
-            c1, c2, c3, c4 = st.columns([3, 2, 1, 1])
-            with c1:
-                st.write(f"**{row['Cliente']}** - {row['Produto']}")
-                st.caption(f"{row['Data'].strftime('%d/%m/%Y')} | {row['Status']}")
-            with c2:
-                st.metric("Valor", f"R$ {row['Valor_Bruto']:,.2f}")
-            with c3:
-                if st.button("✏️", key=f"ed{row['id']}"):
-                    st.session_state.edit_id = row['id']
-                    st.switch_page("vendas.py")
-            with c4:
-                if st.button("🗑️", key=f"del{row['id']}"):
-                    excluir_venda(row['id'])
-                    st.rerun()
-            st.divider()
-    else:
-        st.info("Nenhuma venda encontrada")
-
-# Outras abas (Dashboard e Clientes) simplificadas
-else:
-    st.info("Use o botão 🔄 Atualizar Tudo no topo se não atualizar")
-
-# ====================== RODAPÉ ======================
-st.markdown("---")
-agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
-st.markdown(f"**🕒 Brasília:** {agora.strftime('%H:%M:%S')} | Atualize com o botão acima")
-
-st.caption("Maximos Pods © 2026")
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("💾 Salvar" if not edit_id else "💾 Atualizar Venda", type="primary", use_container_width=True):
+            if cliente and produto and valor > 0:
+                nova = {
+                    'Data': data.strftime('%Y-%m-%d'),
+                    'Cliente': cliente,
+                    'WhatsApp': whatsapp,
+                    'Produto': produto,
+                    'Valor_Bruto': valor,
+                    'Custo': custo,
+                    'Valor_Liquido': round(valor - custo, 2),
+                    'Forma_Pagamento': forma,
+                    'Status': status,
+                    'Observacao': obs
+                }
+                salvar_venda(nova, edit_id)
+                st
