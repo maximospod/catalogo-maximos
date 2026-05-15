@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 import pandas as pd
 import os
-import time
+from zoneinfo import ZoneInfo   # ← Esta linha estava faltando
 
 st.set_page_config(page_title="Maximos Pods", layout="wide", initial_sidebar_state="expanded")
 
@@ -136,24 +136,22 @@ else:
     if not df_filtrado.empty:
         st.dataframe(df_filtrado.sort_values('Data', ascending=False), use_container_width=True)
 
-# ====================== RODAPÉ COM HORÁRIO DE BRASÍLIA ======================
+# ====================== HORÁRIO DE BRASÍLIA ======================
 st.markdown("---")
 
-# Contador de horas em Python (sem JavaScript)
 clock_placeholder = st.empty()
 
-while True:
-    agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
-    hora_brasilia = agora.strftime("%H:%M:%S")
-    
-    clock_placeholder.markdown(f"""
-        <div style='text-align: center; background-color: #1E1E2E; padding: 20px; border-radius: 12px; margin: 10px 0;'>
-            <p style='margin:0; color:#AAAAAA; font-size: 1.1rem;'>🕒 Horário Atual de Brasília</p>
-            <p style='font-size: 2.8rem; font-weight: bold; color: #00FF88; margin: 8px 0 0 0; font-family: Courier New;'>
-                {hora_brasilia}
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    time.sleep(1)
-    st.rerun()   # Atualiza a tela
+# Atualiza o relógio
+agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
+hora_brasilia = agora.strftime("%H:%M:%S")
+
+clock_placeholder.markdown(f"""
+    <div style='text-align: center; background-color: #1E1E2E; padding: 20px; border-radius: 12px; margin: 10px 0;'>
+        <p style='margin:0; color:#AAAAAA; font-size: 1.1rem;'>🕒 Horário Atual de Brasília</p>
+        <p style='font-size: 2.8rem; font-weight: bold; color: #00FF88; margin: 8px 0 0 0; font-family: Courier New;'>
+            {hora_brasilia}
+        </p>
+    </div>
+""", unsafe_allow_html=True)
+
+st.caption("✅ Dados salvos automaticamente em tempo real | Maximos Pods © 2026")
