@@ -2,13 +2,12 @@ import streamlit as st
 from datetime import datetime, timedelta
 import pandas as pd
 import os
-from zoneinfo import ZoneInfo
 
 st.set_page_config(page_title="Maximos Pods", layout="wide", initial_sidebar_state="expanded")
 
-# ====================== CONFIGURAÇÃO GITHUB ======================
-GITHUB_USER = "SEU_USUARIO_AQUI"          # ← TROQUE AQUI
-REPO_NAME = "SEU_REPOSITORIO_AQUI"        # ← TROQUE AQUI
+# ====================== SUAS INFORMAÇÕES ======================
+GITHUB_USER = "castorsevn"
+REPO_NAME = "maximos-pods-vendas"
 
 LOGO_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/main/logo.jfif"
 BANNER_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/main/banner.jfif"
@@ -31,7 +30,7 @@ with col_titulo:
 try:
     st.image(BANNER_URL, use_column_width=True)
 except:
-    st.markdown("---")
+    pass
 
 st.markdown("---")
 
@@ -56,7 +55,7 @@ def salvar_dados(df):
 
 df = carregar_dados()
 
-# Filtro
+# Filtro de data
 st.sidebar.markdown("### 📅 Filtro por Período")
 data_inicio = st.sidebar.date_input("Data Inicial", datetime.today() - timedelta(days=30))
 data_fim = st.sidebar.date_input("Data Final", datetime.today())
@@ -147,4 +146,29 @@ with col2:
     st.markdown("""
         <div style='text-align: center;'>
             <p style='margin:0; color:#888;'>🕒 Horário de Brasília</p>
-            <p id='brasilia_clock' style='font-size: 1.6rem; font-weight:
+            <p id='brasilia_clock' style='font-size: 1.8rem; font-weight: bold; color: #00FF88; margin:0; font-family: Courier New;'>
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.caption("✅ Dados salvos automaticamente em tempo real | Maximos Pods © 2026")
+
+# Relógio ao vivo de Brasília
+st.markdown("""
+    <script>
+        function updateBrasiliaClock() {
+            const now = new Date();
+            const options = { 
+                timeZone: 'America/Sao_Paulo',
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: false 
+            };
+            const timeString = now.toLocaleTimeString('pt-BR', options);
+            document.getElementById('brasilia_clock').innerText = timeString;
+        }
+        setInterval(updateBrasiliaClock, 1000);
+        updateBrasiliaClock();
+    </script>
+""", unsafe_allow_html=True)
