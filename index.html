@@ -7,31 +7,31 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Segoe UI', sans-serif; }
-    .card { transition: all 0.3s ease; }
-    .card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px rgba(0,0,0,0.3); }
-    .product-img { height: 260px !important; object-fit: cover !important; border-radius: 12px; }
+    .card { transition: all 0.3s; }
+    .card:hover { transform: translateY(-8px); box-shadow: 0 15px 25px rgba(0,0,0,0.3); }
+    .product-img { height: 280px !important; object-fit: cover !important; border-radius: 16px; }
   </style>
 </head>
 <body class="bg-zinc-950 text-white">
 
   <div class="max-w-6xl mx-auto p-6">
 
-    <!-- Cabeçalho -->
-    <div class="flex flex-col lg:flex-row items-center justify-between gap-6 mb-12">
+    <!-- Logo + Banner -->
+    <div class="flex flex-col lg:flex-row items-center justify-between gap-6 mb-10">
       <div class="flex items-center gap-4">
-        <img src="logo.jfif" alt="Logo" class="w-28 h-28 rounded-3xl object-cover border-4 border-red-500">
+        <img src="logo.jfif" alt="Logo" class="w-24 h-24 rounded-2xl object-cover border-4 border-red-500">
         <div>
-          <h1 class="text-5xl font-bold text-red-500">MAXIMOS PODS</h1>
-          <p class="text-xl text-zinc-400">Promoção Especial</p>
+          <h1 class="text-4xl font-bold text-red-500">MAXIMOS PODS</h1>
+          <p class="text-zinc-400 text-lg">Elfbar & Ignite</p>
         </div>
       </div>
-      <img src="banner.jfif" alt="Banner" class="w-full lg:w-3/4 rounded-3xl shadow-2xl">
+      <img src="banner.jfif" alt="Banner" class="w-full lg:w-2/3 rounded-2xl shadow-xl">
     </div>
 
-    <h2 class="text-4xl font-bold text-center mb-12">Produtos em Promoção</h2>
+    <h2 class="text-3xl font-semibold text-center mb-10">Produtos em Promoção</h2>
 
     <!-- ELF BAR -->
-    <h3 class="text-2xl font-bold text-red-400 mb-8">Elfbar Ice King 40K</h3>
+    <h3 class="text-xl font-bold text-red-400 mb-6">Elfbar Ice King 40K</h3>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
 
       <div class="card bg-zinc-900 rounded-3xl overflow-hidden">
@@ -79,7 +79,7 @@
     </div>
 
     <!-- IGNITE -->
-    <h3 class="text-2xl font-bold text-orange-400 mb-8">Ignite</h3>
+    <h3 class="text-xl font-bold text-orange-400 mb-6">Ignite</h3>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
       <div class="card bg-zinc-900 rounded-3xl overflow-hidden">
@@ -124,7 +124,47 @@
         </div>
       </div>
 
-      <!-- Adicione aqui os outros Ignite quando quiser -->
+      <div class="card bg-zinc-900 rounded-3xl overflow-hidden">
+        <img src="https://raw.githubusercontent.com/maximospod/catalogo-maximos/main/pods%20imagens/v155_tropicalice.png" class="product-img" alt="Tropical Açaí">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold">Tropical Açaí V155</h2>
+          <div class="mt-4">
+            <span class="line-through text-zinc-500">R$ 130,00</span>
+            <p class="text-4xl font-bold text-green-400">R$ 102,00</p>
+          </div>
+          <a href="https://wa.me/5548998189031?text=Quero%20o%20Ignite%20Tropical%20Açaí%20V155" target="_blank" class="block text-center mt-8 bg-green-600 hover:bg-green-500 py-4 rounded-2xl font-semibold">
+            Pedir no WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <div class="card bg-zinc-900 rounded-3xl overflow-hidden">
+        <img src="https://raw.githubusercontent.com/maximospod/catalogo-maximos/main/pods%20imagens/v80_strawberrykiwi.png" class="product-img" alt="Strawberry Kiwi">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold">Strawberry Kiwi V80</h2>
+          <div class="mt-4">
+            <span class="line-through text-zinc-500">R$ 100,00</span>
+            <p class="text-4xl font-bold text-green-400">R$ 90,00</p>
+          </div>
+          <a href="https://wa.me/5548998189031?text=Quero%20o%20Ignite%20Strawberry%20Kiwi%20V80" target="_blank" class="block text-center mt-8 bg-green-600 hover:bg-green-500 py-4 rounded-2xl font-semibold">
+            Pedir no WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <div class="card bg-zinc-900 rounded-3xl overflow-hidden">
+        <img src="https://raw.githubusercontent.com/maximospod/catalogo-maximos/main/pods%20imagens/passion%20fruit%20sour%20kiwi_v80.png" class="product-img" alt="Passion Fruit Sour Kiwi">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold">Passion Fruit Sour Kiwi V80</h2>
+          <div class="mt-4">
+            <span class="line-through text-zinc-500">R$ 100,00</span>
+            <p class="text-4xl font-bold text-green-400">R$ 90,00</p>
+          </div>
+          <a href="https://wa.me/5548998189031?text=Quero%20o%20Ignite%20Passion%20Fruit%20Sour%20Kiwi%20V80" target="_blank" class="block text-center mt-8 bg-green-600 hover:bg-green-500 py-4 rounded-2xl font-semibold">
+            Pedir no WhatsApp
+          </a>
+        </div>
+      </div>
 
     </div>
 
